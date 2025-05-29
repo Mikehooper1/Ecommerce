@@ -8,7 +8,7 @@ import Slider from '../components/Slider';
 const features = [
   {
     name: 'Premium Quality',
-    description: 'We offer only the highest quality vaping products from trusted manufacturers.',
+    description: 'We offer only the highest quality merchandise products from trusted manufacturers.',
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
@@ -133,10 +133,10 @@ export default function Home() {
         <div className="mx-auto max-w-2xl lg:text-center">
           <h2 className="text-base font-semibold leading-7 text-primary-600">Why Choose Us</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Everything you need for the perfect vaping experience
+            Everything you need for the perfect merchandise experience
           </p>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            We are committed to providing the best vaping products and services to our customers.
+            We are committed to providing the best merchandise and services to our customers.
           </p>
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
@@ -186,10 +186,10 @@ export default function Home() {
         </svg>
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Ready to start vaping?
+            Ready to start merchandise?
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
-            Join thousands of satisfied customers who trust VapeXIndia for their vaping needs.
+            Join thousands of satisfied customers who trust NoruOasis for their Premium merchandise.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
