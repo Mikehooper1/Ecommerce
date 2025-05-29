@@ -52,7 +52,7 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="text-white font-bold text-xl hover:text-gray-300 transition-colors duration-200">
-              VapeX India
+              NoruOasis
             </Link>
           </div>
 
