@@ -4,13 +4,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCdfNovpT6QHygV-9_lgPq6HNLT83wkGCM",
-  authDomain: "vapexindia-x.firebaseapp.com",
-  projectId: "vapexindia-x",
-  storageBucket: "vapexindia-x.firebasestorage.app",
-  messagingSenderId: "790169007621",
-  appId: "1:790169007621:web:9913271a5569204a3c4e6c",
-  measurementId: "G-Y3QCF394Y5"
+  apiKey: "Your Api key",
+  authDomain: "Ecommerce.firebaseapp.com",
+  projectId: "Ecommerce",
+  storageBucket: "Ecommerce.firebasestorage.app",
+  messagingSenderId: "Your senders ID",
+  appId: "1:76586969007621:web:9913271a252534a3c4e6c",
+  measurementId: "Your Measurement ID"
 };
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
