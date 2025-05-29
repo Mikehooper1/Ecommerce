@@ -37,11 +37,11 @@ export default function Navbar() {
                   <Link to="/" className="flex items-center space-x-2">
                     <img
                       src="./assets/logo.png"
-                      alt="VapeXIndia Logo"
+                      alt="NoruOasis Logo"
                       className="h-20 w-auto"
                     />
                     {/* <span className="text-2xl font-bold text-white">
-                      VapeXIndia
+                      NoruOasis
                     </span> */}
                   </Link>
                 </div>
