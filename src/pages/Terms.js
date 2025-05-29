@@ -15,7 +15,7 @@ export default function Terms() {
             <div className="lg:pr-8">
               <h2 className="text-2xl font-bold tracking-tight text-gray-900">1. Acceptance of Terms</h2>
               <p className="mt-6 text-base leading-7 text-gray-600">
-                By accessing and using VapeXIndia's website and services, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our services.
+                By accessing and using Noruoasis's website and services, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our services.
               </p>
 
               <h2 className="mt-10 text-2xl font-bold tracking-tight text-gray-900">2. Use of Services</h2>
