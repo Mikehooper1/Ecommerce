@@ -186,7 +186,7 @@ export default function Home() {
         </svg>
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Ready to start merchandise?
+            Ready to start your Journey?
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
             Join thousands of satisfied customers who trust NoruOasis for their Premium merchandise.
