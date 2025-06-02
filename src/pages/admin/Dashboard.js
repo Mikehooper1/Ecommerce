@@ -7,6 +7,8 @@ import {
   CurrencyDollarIcon,
   ChartBarIcon,
   PhotographIcon,
+  StarIcon,
+  ChatAltIcon,
 } from '@heroicons/react/solid';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -19,6 +21,8 @@ export default function Dashboard() {
     customers: 0,
     revenue: 0,
     banners: 0,
+    reviews: 0,
+    testimonials: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +34,15 @@ export default function Dashboard() {
         const productsCount = productsSnap.size;
         console.log('Products count:', productsCount);
 
+        // Calculate total reviews
+        let totalReviews = 0;
+        productsSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.ratings && Array.isArray(data.ratings)) {
+            totalReviews += data.ratings.length;
+          }
+        });
+
         // Fetch orders and calculate revenue
         const ordersSnap = await getDocs(collection(db, 'orders'));
         const ordersCount = ordersSnap.size;
@@ -39,9 +52,16 @@ export default function Dashboard() {
         let revenue = 0;
         ordersSnap.forEach(doc => {
           const data = doc.data();
-          revenue += Number(data.total || data.amount || 0);
+          console.log('Order status:', data.status, 'Amount:', data.total || data.amount);
+          // Only add to revenue if the order is not canceled
+          if (data.status !== 'canceled' && data.status !== 'Cancelled') {
+            revenue += Number(data.total || data.amount || 0);
+            console.log('Adding to revenue:', data.total || data.amount);
+          } else {
+            console.log('Skipping canceled order');
+          }
         });
-        console.log('Total revenue:', revenue);
+        console.log('Final total revenue:', revenue);
 
         // Fetch customers
         const customersSnap = await getDocs(collection(db, 'customers'));
@@ -53,12 +73,19 @@ export default function Dashboard() {
         const bannersCount = bannersSnap.size;
         console.log('Banners count:', bannersCount);
 
+        // Fetch testimonials
+        const testimonialsSnap = await getDocs(collection(db, 'testimonials'));
+        const testimonialsCount = testimonialsSnap.size;
+        console.log('Testimonials count:', testimonialsCount);
+
         setTotals({
           products: productsCount,
           orders: ordersCount,
           customers: customersCount,
           revenue,
           banners: bannersCount,
+          reviews: totalReviews,
+          testimonials: testimonialsCount,
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -99,10 +126,24 @@ export default function Dashboard() {
       link: '/admin/revenue',
     },
     {
+      name: 'Total Reviews',
+      value: loading ? '...' : totals.reviews,
+      icon: StarIcon,
+      color: 'bg-blue-600',
+      link: '/admin/reviews',
+    },
+    {
+      name: 'Total Testimonials',
+      value: loading ? '...' : totals.testimonials,
+      icon: ChatAltIcon,
+      color: 'bg-indigo-600',
+      link: '/admin/testimonials',
+    },
+    {
       name: 'Total Banners',
       value: loading ? '...' : totals.banners,
       icon: PhotographIcon,
-      color: 'bg-blue-600',
+      color: 'bg-pink-600',
       link: '/admin/banners',
     },
   ];
@@ -122,7 +163,7 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="mt-8">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
             {stats.map((item) => (
               <Link
                 key={item.name}
@@ -156,7 +197,7 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <div className="mt-8">
           <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <Link
               to="/admin/products/new"
               className="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
@@ -182,6 +223,15 @@ export default function Dashboard() {
               <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
               <span className="mt-2 block text-sm font-medium text-gray-900">
                 Add New Customer
+              </span>
+            </Link>
+            <Link
+              to="/admin/reviews"
+              className="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              <StarIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <span className="mt-2 block text-sm font-medium text-gray-900">
+                Manage Reviews
               </span>
             </Link>
             <Link

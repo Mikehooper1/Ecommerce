@@ -141,50 +141,69 @@ export default function Products() {
         {/* Products Grid */}
         <div className="mt-8">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="relative">
-                  <img
-                    className="w-full h-48 object-cover"
-                    src={product.imageUrl}
-                    alt={product.name}
-                  />
-                  <div className="absolute top-2 right-2 flex space-x-2">
-                    <Link
-                      to={`/admin/products/edit/${product.id}`}
-                      className="p-1 bg-white rounded-full shadow hover:bg-gray-100"
-                    >
-                      <PencilIcon className="h-5 w-5 text-primary-600" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="p-1 bg-white rounded-full shadow hover:bg-gray-100"
-                    >
-                      <TrashIcon className="h-5 w-5 text-red-600" />
-                    </button>
+            {filteredProducts.map((product) => {
+              console.log('Product images:', product.images, 'Image URL:', product.imageUrl); // Debug log
+              const imageSrc =
+                product.images && product.images.length > 0
+                  ? product.images[0]
+                  : product.imageUrl
+                    ? product.imageUrl.trim()
+                    : '/placeholder.png';
+              return (
+                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="relative">
+                    <img
+                      className="w-full h-48 object-cover"
+                      src={imageSrc}
+                      alt={product.name}
+                      onError={e => { e.target.onerror = null; e.target.src = '/placeholder.png'; }}
+                    />
+                    <div className="absolute top-2 right-2 flex space-x-2">
+                      <Link
+                        to={`/admin/products/edit/${product.id}`}
+                        className="p-1 bg-white rounded-full shadow hover:bg-gray-100"
+                      >
+                        <PencilIcon className="h-5 w-5 text-primary-600" />
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="p-1 bg-white rounded-full shadow hover:bg-gray-100"
+                      >
+                        <TrashIcon className="h-5 w-5 text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
+                    <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>
+                    <div className="mt-4 flex justify-between items-center">
+                      <div className="flex flex-col">
+                        {product.salePrice ? (
+                          <>
+                            <span className="text-sm text-gray-500 line-through">₹{product.price}</span>
+                            <span className="text-lg font-semibold text-red-600">₹{product.salePrice}</span>
+                          </>
+                        ) : (
+                          <span className="text-lg font-semibold text-gray-900">₹{product.price}</span>
+                        )}
+                      </div>
+                      <span className={`px-2 py-1 text-sm rounded-full ${
+                        product.stock > 0 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {product.category}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
-                  <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">₹{product.price}</span>
-                    <span className={`px-2 py-1 text-sm rounded-full ${
-                      product.stock > 0 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
-                    </span>
-                  </div>
-                  <div className="mt-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {product.category}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           {/* No Products Message */}

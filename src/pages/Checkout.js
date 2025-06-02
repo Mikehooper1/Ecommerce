@@ -45,25 +45,28 @@ export default function Checkout() {
       const orderData = {
         user: {
           id: currentUser?.uid || 'guest',
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
+          name: formData.fullName || 'Guest',
+          email: formData.email || '',
+          phone: formData.phone || '',
           isGuest: !currentUser,
         },
         items: cart.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          imageUrl: item.imageUrl || item.image,
+          id: item.id || '',
+          name: item.name || 'Unknown Product',
+          price: Number(item.price) || 0,
+          salePrice: Number(item.salePrice) || null,
+          quantity: Number(item.quantity) || 1,
+          imageUrl: item.imageUrl || item.image || '',
+          flavor: item.flavor || null,
+          variant: item.selectedVariant || null,
         })),
-        total: total,
+        total: Number(cart.reduce((sum, item) => sum + (item.salePrice || item.price) * item.quantity, 0)) || 0,
         status: 'Pending',
         shippingAddress: {
-          street: formData.address,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.zipCode,
+          street: formData.address || '',
+          city: formData.city || '',
+          state: formData.state || '',
+          pincode: formData.zipCode || '',
         },
         date: new Date().toISOString(),
         createdAt: new Date().toISOString(),
@@ -271,13 +274,24 @@ export default function Checkout() {
                         )}
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-gray-900">₹{item.price * item.quantity}</p>
+                    <div className="text-right">
+                      {item.salePrice ? (
+                        <>
+                          <p className="text-sm line-through text-gray-500">₹{item.price * item.quantity}</p>
+                          <p className="text-sm font-medium text-gray-900">₹{item.salePrice * item.quantity}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900">₹{item.price * item.quantity}</p>
+                      )}
+                    </div>
                   </div>
                 ))}
 
                 <div className="flex items-center justify-between">
                   <div className="text-base font-medium text-gray-900">Subtotal</div>
-                  <div className="text-base font-medium text-gray-900">₹{total}</div>
+                  <div className="text-base font-medium text-gray-900">
+                    ₹{cart.reduce((sum, item) => sum + (item.salePrice || item.price) * item.quantity, 0)}
+                  </div>
                 </div>
                 <p className="mt-1 text-sm text-gray-500">
                   Shipping and taxes calculated at checkout.

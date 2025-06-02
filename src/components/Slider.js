@@ -34,7 +34,7 @@ export default function Slider() {
   if (banners.length === 0) return <div className="h-48 sm:h-64 flex items-center justify-center">No banners found.</div>;
 
   return (
-    <div className="relative w-full h-[16rem] sm:h-[24rem] md:h-[32rem] lg:h-[40rem] overflow-hidden rounded-lg shadow-lg bg-gray-200 z-0">
+    <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-[16rem] sm:h-[24rem] md:h-[32rem] lg:h-[40rem] overflow-hidden rounded-lg shadow-lg bg-gray-200 z-30">
       {banners.map((banner, idx) => (
         <img
           key={banner.id}
@@ -44,7 +44,7 @@ export default function Slider() {
         />
       ))}
       <button
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1.5 sm:p-2 shadow hover:bg-white"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1.5 sm:p-2 shadow hover:bg-white z-40"
         onClick={() => setCurrent((prev) => (prev - 1 + banners.length) % banners.length)}
         aria-label="Previous"
       >
@@ -53,7 +53,7 @@ export default function Slider() {
         </svg>
       </button>
       <button
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1.5 sm:p-2 shadow hover:bg-white"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/70 rounded-full p-1.5 sm:p-2 shadow hover:bg-white z-40"
         onClick={() => setCurrent((prev) => (prev + 1) % banners.length)}
         aria-label="Next"
       >

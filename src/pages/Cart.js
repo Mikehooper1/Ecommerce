@@ -50,9 +50,24 @@ export default function Cart() {
                             {item.name}
                           </Link>
                         </h4>
-                        <p className="ml-4 text-sm font-medium text-gray-900">₹{item.price}</p>
+                        <div className="text-right">
+                          {item.salePrice ? (
+                            <>
+                              <p className="text-sm line-through text-gray-500">₹{item.price}</p>
+                              <p className="text-sm font-medium text-gray-900">₹{item.salePrice}</p>
+                            </>
+                          ) : (
+                            <p className="text-sm font-medium text-gray-900">₹{item.price}</p>
+                          )}
+                        </div>
                       </div>
                       <p className="mt-1 text-sm text-gray-500">{item.category}</p>
+                      {item.selectedVariant && (
+                        <p className="mt-1 text-sm text-gray-500">Variant: {item.selectedVariant}</p>
+                      )}
+                      {item.flavor && (
+                        <p className="mt-1 text-sm text-gray-500">Flavor: {item.flavor}</p>
+                      )}
                     </div>
 
                     <div className="mt-4 flex flex-1 items-end justify-between">
@@ -94,7 +109,9 @@ export default function Cart() {
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="text-base font-medium text-gray-900">Subtotal</div>
-                <div className="text-base font-medium text-gray-900">₹{total}</div>
+                <div className="text-base font-medium text-gray-900">
+                  ₹{cart.reduce((sum, item) => sum + (item.salePrice || item.price) * item.quantity, 0)}
+                </div>
               </div>
               <p className="text-sm text-gray-500">
                 Shipping and taxes calculated at checkout.

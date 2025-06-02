@@ -421,10 +421,33 @@ export default function Orders() {
                                                 <p className="text-sm text-gray-500">
                                                   Quantity: {item.quantity}
                                                 </p>
+                                                {item.flavor && (
+                                                  <p className="text-sm text-gray-500">
+                                                    Flavor: {item.flavor}
+                                                  </p>
+                                                )}
+                                                {item.variant && (
+                                                  <p className="text-sm text-gray-500">
+                                                    Variant: {item.variant}
+                                                  </p>
+                                                )}
                                               </div>
-                                              <p className="text-sm font-medium text-gray-900">
-                                                ₹{item.price.toLocaleString()}
-                                              </p>
+                                              <div className="text-right">
+                                                {item.salePrice ? (
+                                                  <>
+                                                    <p className="text-sm line-through text-gray-500">
+                                                      ₹{item.price.toLocaleString()}
+                                                    </p>
+                                                    <p className="text-sm font-medium text-gray-900">
+                                                      ₹{item.salePrice.toLocaleString()}
+                                                    </p>
+                                                  </>
+                                                ) : (
+                                                  <p className="text-sm font-medium text-gray-900">
+                                                    ₹{item.price.toLocaleString()}
+                                                  </p>
+                                                )}
+                                              </div>
                                             </div>
                                           </li>
                                         ))}

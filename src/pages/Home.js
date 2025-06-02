@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import Slider from '../components/Slider';
+import { StarIcon } from '@heroicons/react/solid';
 
 const features = [
   {
@@ -35,14 +36,22 @@ const features = [
   },
 ];
 
+const calculateAverageRating = (ratings) => {
+  if (!ratings || ratings.length === 0) return 0;
+  const sum = ratings.reduce((acc, curr) => acc + curr.rating, 0);
+  return (sum / ratings.length).toFixed(1);
+};
+
 export default function Home() {
   const { addToCart } = useCart();
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchFeaturedProducts();
+    fetchTestimonials();
   }, []);
 
   const fetchFeaturedProducts = async () => {
@@ -53,6 +62,7 @@ export default function Home() {
         id: doc.id,
         ...doc.data()
       }));
+      console.log('Featured products:', products.map(p => ({ id: p.id, name: p.name, imageUrl: p.imageUrl })));
       setFeaturedProducts(products);
       setLoading(false);
     } catch (err) {
@@ -62,11 +72,38 @@ export default function Home() {
     }
   };
 
+  const fetchTestimonials = async () => {
+    try {
+      const q = query(collection(db, 'testimonials'), orderBy('date', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const testimonialsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTestimonials(testimonialsData);
+    } catch (err) {
+      console.error('Error fetching testimonials:', err);
+      setError('Failed to fetch testimonials');
+    }
+  };
+
   return (
     <div className="bg-white">
       {/* Hero section */}
-      <div className="mx-auto mt-32 max-w-7xl px-10 sm:mt-12 lg:px-8">
+      <div className="mx-auto mt-8 max-w-7xl px-10 sm:mt-8 lg:px-8">
         <Slider />
+      </div>
+      {/* Feature bar below slider */}
+      <div className="w-full bg-primary-600 text-white py-4 text-sm font-semibold tracking-wide overflow-hidden relative mt-6">
+        <div className="marquee whitespace-nowrap flex items-center">
+          <span className="mx-8">100% ORIGINAL GUARANTEED</span>
+          <span className="mx-8">2 DAY RETURN/REFUND</span>
+          <span className="mx-8">ENTER WEEKLY GIVEAWAY FOR FREE</span>
+          <span className="mx-8">EXPRESS SHIPPING ALL OVER INDIA</span>
+        </div>
+        {/* Optional: gradient fade for edges */}
+        <div className="pointer-events-none absolute top-0 left-0 h-full w-8 bg-gradient-to-r from-primary-600 to-transparent"></div>
+        <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-primary-600 to-transparent"></div>
       </div>
 
       {/* Featured products section */}
@@ -94,9 +131,13 @@ export default function Home() {
               <div key={product.id} className="group relative">
                 <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
                   <img
-                    src={product.imageUrl}
+                    src={product.imageUrl || (product.images && product.images[0]) || '/placeholder-image.png'}
                     alt={product.name}
                     className="h-full w-full object-cover object-center group-hover:opacity-75"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/placeholder-image.png';
+                    }}
                   />
                 </div>
                 <div className="mt-4 flex justify-between">
@@ -108,6 +149,25 @@ export default function Home() {
                       </Link>
                     </h3>
                     <p className="mt-1 text-sm text-gray-500 line-clamp-1">{product.description}</p>
+                    {product.ratings && product.ratings.length > 0 && (
+                      <div className="mt-1 flex items-center">
+                        <div className="flex items-center">
+                          {[0, 1, 2, 3, 4].map((rating) => (
+                            <StarIcon
+                              key={rating}
+                              className={`h-4 w-4 ${
+                                rating < Math.round(calculateAverageRating(product.ratings))
+                                  ? 'text-yellow-400'
+                                  : 'text-gray-200'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <p className="ml-2 text-sm text-gray-500">
+                          ({product.ratings.length} {product.ratings.length === 1 ? 'review' : 'reviews'})
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <p className="text-sm font-medium text-gray-900">Rs.{product.price}</p>
                 </div>
@@ -155,6 +215,55 @@ export default function Home() {
               </div>
             ))}
           </dl>
+        </div>
+      </div>
+
+      {/* Testimonials section */}
+      <div className="mx-auto mt-32 max-w-7xl px-6 sm:mt-36 lg:px-8">
+        <div className="mx-auto max-w-2xl lg:text-center">
+          <h2 className="text-base font-semibold leading-7 text-primary-600">Testimonials</h2>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            What Our Customers Say
+          </p>
+          <p className="mt-6 text-lg leading-8 text-gray-600">
+            Read about the experiences of our satisfied customers.
+          </p>
+        </div>
+        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          {testimonials.map((testimonial) => (
+            <div key={testimonial.id} className="flex flex-col justify-between rounded-2xl bg-white p-8 ring-1 ring-gray-200 xl:p-10">
+              <div className="mb-8">
+                <div className="flex items-center gap-x-4">
+                  <div className="flex items-center">
+                    {[0, 1, 2, 3, 4].map((rating) => (
+                      <StarIcon
+                        key={rating}
+                        className={`h-5 w-5 ${
+                          rating < testimonial.rating ? 'text-yellow-400' : 'text-gray-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {new Date(testimonial.date).toLocaleDateString()}
+                  </div>
+                </div>
+                <p className="mt-4 text-lg font-semibold leading-8 text-gray-900">{testimonial.title}</p>
+                <p className="mt-4 text-base leading-7 text-gray-600">{testimonial.content}</p>
+              </div>
+              <div className="flex items-center gap-x-4">
+                <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center">
+                  <span className="text-lg font-semibold text-primary-600">
+                    {testimonial.customerName.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">{testimonial.customerName}</div>
+                  <div className="text-sm text-gray-500">{testimonial.location}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

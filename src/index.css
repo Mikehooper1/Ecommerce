@@ -44,4 +44,20 @@
   .card {
     @apply bg-white rounded-lg shadow-md overflow-hidden;
   }
+}
+
+@layer utilities {
+  .marquee {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 25s linear infinite;
+  }
+  @keyframes marquee {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
 } 

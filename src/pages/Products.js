@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { FilterIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/solid';
+import { FilterIcon, ChevronDownIcon, ChevronUpIcon, StarIcon } from '@heroicons/react/solid';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -20,6 +20,12 @@ const sortOptions = [
   { name: 'Price: High to Low', value: 'price-desc' },
   { name: 'Newest', value: 'newest' },
 ];
+
+const calculateAverageRating = (ratings) => {
+  if (!ratings || ratings.length === 0) return 0;
+  const sum = ratings.reduce((acc, curr) => acc + curr.rating, 0);
+  return (sum / ratings.length).toFixed(1);
+};
 
 export default function Products() {
   const location = useLocation();
@@ -59,7 +65,34 @@ export default function Products() {
       let q = collection(db, 'products');
       
       if (selectedCategory === 'most-selling') {
-        q = query(q, where('category', '==', 'MOST SELLING'));
+        // First, let's log all products to see their structure
+        const allProductsSnapshot = await getDocs(collection(db, 'products'));
+        const allProducts = allProductsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // Log complete product data to understand structure
+        console.log('Complete product data:', allProducts);
+
+        // Try to find products that are marked as most selling
+        const mostSellingProducts = allProducts.filter(product => {
+          console.log('Checking product:', product.name, 'Data:', product);
+          return (
+            product.isMostSelling === true || 
+            product.category === 'MOST SELLING' ||
+            product.category === 'Most Selling' ||
+            product.category === 'most selling' ||
+            product.mostSelling === true ||
+            product.most_selling === true
+          );
+        });
+
+        console.log('Most selling products found:', mostSellingProducts);
+        
+        setProducts(mostSellingProducts);
+        setLoading(false);
+        return;
       } else if (selectedCategory !== 'all') {
         const categoryName = categories.find(cat => cat.id === selectedCategory)?.name;
         if (categoryName) {
@@ -73,6 +106,10 @@ export default function Products() {
         ...doc.data()
       }));
 
+      // Debug log
+      console.log('Selected category:', selectedCategory);
+      console.log('Fetched products:', productsList);
+
       // Extract unique brands
       const uniqueBrands = [...new Set(productsList.map(product => product.brand))].filter(Boolean);
       setBrands(uniqueBrands);
@@ -80,6 +117,7 @@ export default function Products() {
       setProducts(productsList);
       setLoading(false);
     } catch (err) {
+      console.error('Error fetching products:', err);
       setError('Failed to fetch products');
       setLoading(false);
     }
@@ -95,6 +133,11 @@ export default function Products() {
 
     // Sort products
     filtered.sort((a, b) => {
+      // First sort by stock status (in stock products first)
+      if (a.stock > 0 && b.stock === 0) return -1;
+      if (a.stock === 0 && b.stock > 0) return 1;
+
+      // Then apply the selected sorting criteria
       switch (sortBy) {
         case 'price-asc':
           return a.price - b.price;
@@ -118,17 +161,7 @@ export default function Products() {
   };
 
   const handleAddToCart = (product) => {
-    const selectedVariant = selectedVariants[product.id];
-    if (product.variants && product.variants.length > 0 && !selectedVariant) {
-      alert('Please select a flavor first');
-      return;
-    }
-    
-    const productToAdd = selectedVariant 
-      ? { ...product, price: selectedVariant.price, stock: selectedVariant.stock, selectedVariant: selectedVariant.name }
-      : product;
-    
-    addToCart(productToAdd);
+    addToCart(product);
   };
 
   if (loading) {
@@ -266,67 +299,89 @@ export default function Products() {
 
           {/* Product grid */}
           <div className="lg:col-span-3">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 items-stretch sm:grid-cols-2 md:grid-cols-3">
               {filteredProducts.map((product) => (
-                <div key={product.id} className="group relative">
-                  <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="h-full w-full object-cover object-center group-hover:opacity-75"
-                    />
-                  </div>
-                  <div className="mt-4 flex justify-between">
-                    <div className="flex-1 min-w-0 max-w-full">
-                      <h3 className="text-sm text-gray-700">
-                        <Link to={`/product/${product.id}`}>
-                          <span aria-hidden="true" className="absolute inset-0" />
-                          {product.name}
-                        </Link>
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500 truncate block w-full">{product.description}</p>
-                      <p className="mt-1 text-sm text-gray-500">{product.brand}</p>
-                    </div>
-                    <p className="text-sm font-medium text-gray-900 flex-shrink-0">
-                      Rs.{selectedVariants[product.id]?.price || product.price}
-                    </p>
-                  </div>
-                  
-                  {product.variants && product.variants.length > 0 && (
-                    <div className="mt-2">
-                      <select
-                        value={selectedVariants[product.id]?.name || ''}
-                        onChange={(e) => {
-                          const selectedVariant = product.variants.find(v => v.name === e.target.value);
-                          handleVariantChange(product.id, selectedVariant);
+                <div key={product.id} className="group relative h-full flex flex-col">
+                  <Link to={`/product/${product.id}`} className="block">
+                    <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
+                      <img
+                        src={
+                          product.images && product.images.length > 0
+                            ? product.images[0]
+                            : product.imageUrl
+                              ? product.imageUrl
+                              : '/placeholder-image.png'
+                        }
+                        alt={product.name}
+                        className="h-full w-full object-cover object-center group-hover:opacity-75"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/placeholder-image.png';
                         }}
-                        className="w-full rounded-md border-gray-300 py-1.5 pl-3 pr-10 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary-600"
-                      >
-                        <option value="">Select Flavor</option>
-                        {product.variants.map((variant, index) => (
-                          <option key={index} value={variant.name}>
-                            {variant.name} - Rs.{variant.price}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
-                  )}
-
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={product.stock === 0 || (product.variants?.length > 0 && !selectedVariants[product.id])}
-                    className={`mt-4 w-full rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 ${
-                      product.stock === 0 || (product.variants?.length > 0 && !selectedVariants[product.id])
-                        ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-primary-600 hover:bg-primary-500'
-                    }`}
-                  >
-                    {product.stock === 0 
-                      ? 'Sold Out' 
-                      : product.variants?.length > 0 && !selectedVariants[product.id]
-                        ? 'Select Flavor'
-                        : 'Add to Cart'}
-                  </button>
+                    <div className="mt-4 flex justify-between">
+                      <div className="flex-1 min-w-0 max-w-full">
+                        <h3 className="text-sm text-gray-700">
+                          {product.name}
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-500 truncate block w-full">{product.description}</p>
+                        <p className="mt-1 text-sm text-gray-500">{product.brand}</p>
+                        {product.ratings && product.ratings.length > 0 && (
+                          <div className="mt-1 flex items-center">
+                            <div className="flex items-center">
+                              {[0, 1, 2, 3, 4].map((rating) => (
+                                <StarIcon
+                                  key={rating}
+                                  className={`h-4 w-4 ${
+                                    rating < Math.round(calculateAverageRating(product.ratings))
+                                      ? 'text-yellow-400'
+                                      : 'text-gray-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="ml-2 text-sm text-gray-500">
+                              ({product.ratings.length} {product.ratings.length === 1 ? 'review' : 'reviews'})
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        {product.salePrice ? (
+                          <div>
+                            <p className="text-sm font-medium text-gray-500 line-through">
+                              Rs.{selectedVariants[product.id]?.price || product.price}
+                            </p>
+                            <p className="text-sm font-medium text-red-600">
+                              Rs.{selectedVariants[product.id]?.salePrice || product.salePrice}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900">
+                            Rs.{selectedVariants[product.id]?.price || product.price}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  <div className="mt-auto">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(product);
+                      }}
+                      disabled={product.stock === 0}
+                      className={`mt-4 w-full rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 ${
+                        product.stock === 0
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-primary-600 hover:bg-primary-500'
+                      }`}
+                    >
+                      {product.stock === 0 ? 'Sold Out' : 'Add to Cart'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

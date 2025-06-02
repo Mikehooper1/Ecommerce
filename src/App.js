@@ -37,6 +37,8 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import Reviews from './pages/admin/Reviews';
+import Testimonials from './pages/admin/Testimonials';
 
 // Protected Routes
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -145,6 +147,8 @@ function App() {
                     <Revenue />
                   </AdminRoute>
                 } />
+                <Route path="/admin/reviews" element={<AdminRoute><Reviews /></AdminRoute>} />
+                <Route path="/admin/testimonials" element={<AdminRoute><Testimonials /></AdminRoute>} />
 
                 {/* Catch all route - redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />

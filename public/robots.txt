@@ -1,3 +1,21 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Allow: /products
+Allow: /about
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+Allow: /sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /checkout
+Disallow: /cart
+Disallow: /profile
+Disallow: /login
+Disallow: /register
+
+# Sitemap
+Sitemap: https://vapexindia.com/sitemap.xml

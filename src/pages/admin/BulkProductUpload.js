@@ -9,7 +9,6 @@ const categories = [
   { id: 'disposable', name: 'DISPOSABLE' },
   { id: 'nic-salts', name: 'NIC & SALTS' },
   { id: 'accessories', name: 'Accessories' },
-  { id: 'most-selling', name: 'MOST SELLING' },
 ];
 
 // Sample data for the template
@@ -18,6 +17,7 @@ const sampleData = [
     name: 'Sample Pod Kit',
     description: 'A high-quality pod kit with adjustable airflow',
     price: 1999,
+    salePrice: 1799,
     stock: 50,
     category: 'podkits',
     brand: 'VapeX',
@@ -27,19 +27,35 @@ const sampleData = [
       { name: 'Silver', price: 1999, stock: 25 }
     ]),
     featured: 'true',
-    imageUrl: 'https://example.com/image1.jpg'
+    mostSelling: 'true',
+    images: JSON.stringify([
+      'https://example.com/image1.jpg',
+      'https://example.com/image2.jpg'
+    ]),
+    ratings: JSON.stringify([
+      {
+        rating: 5,
+        content: 'Great product!',
+        date: new Date().toISOString(),
+        customerName: 'John Doe',
+        isCustomerReview: true
+      }
+    ])
   },
   {
     name: 'Disposable Vape',
     description: 'Convenient disposable vape with 5000 puffs',
     price: 999,
+    salePrice: '',
     stock: 100,
     category: 'disposable',
     brand: 'VapeX',
     flavors: 'Mint, Watermelon, Ice Cream',
     variants: '',
     featured: 'false',
-    imageUrl: 'https://example.com/image2.jpg'
+    mostSelling: 'false',
+    images: JSON.stringify(['https://example.com/image3.jpg']),
+    ratings: ''
   }
 ];
 
@@ -50,6 +66,95 @@ export default function BulkProductUpload() {
   const [error, setError] = useState(null);
   const [preview, setPreview] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [validationErrors, setValidationErrors] = useState([]);
+
+  const validateProduct = (product, index) => {
+    const errors = [];
+    
+    // Required fields validation
+    const requiredFields = ['name', 'description', 'price', 'stock', 'category', 'brand'];
+    requiredFields.forEach(field => {
+      if (!product[field]) {
+        errors.push(`Row ${index + 1}: ${field} is required`);
+      }
+    });
+
+    // Category validation
+    if (product.category && !categories.find(cat => cat.id === product.category)) {
+      errors.push(`Row ${index + 1}: Invalid category "${product.category}". Must be one of: ${categories.map(c => c.id).join(', ')}`);
+    }
+
+    // Price validation
+    if (product.price && (isNaN(product.price) || product.price < 0)) {
+      errors.push(`Row ${index + 1}: Price must be a positive number`);
+    }
+
+    // Sale price validation
+    if (product.salePrice && (isNaN(product.salePrice) || product.salePrice < 0)) {
+      errors.push(`Row ${index + 1}: Sale price must be a positive number`);
+    }
+    if (product.salePrice && product.price && Number(product.salePrice) >= Number(product.price)) {
+      errors.push(`Row ${index + 1}: Sale price must be less than regular price`);
+    }
+
+    // Stock validation
+    if (product.stock && (isNaN(product.stock) || product.stock < 0)) {
+      errors.push(`Row ${index + 1}: Stock must be a positive number`);
+    }
+
+    // Variants validation
+    if (product.variants) {
+      try {
+        const variants = JSON.parse(product.variants);
+        if (!Array.isArray(variants)) {
+          errors.push(`Row ${index + 1}: Variants must be a JSON array`);
+        } else {
+          variants.forEach((variant, vIndex) => {
+            if (variant.price && (isNaN(variant.price) || variant.price < 0)) {
+              errors.push(`Row ${index + 1}: Variant ${vIndex + 1} price must be a positive number`);
+            }
+            if (variant.stock && (isNaN(variant.stock) || variant.stock < 0)) {
+              errors.push(`Row ${index + 1}: Variant ${vIndex + 1} stock must be a positive number`);
+            }
+          });
+        }
+      } catch (e) {
+        errors.push(`Row ${index + 1}: Invalid variants JSON format`);
+      }
+    }
+
+    // Images validation
+    if (product.images) {
+      try {
+        const images = JSON.parse(product.images);
+        if (!Array.isArray(images)) {
+          errors.push(`Row ${index + 1}: Images must be a JSON array`);
+        }
+      } catch (e) {
+        errors.push(`Row ${index + 1}: Invalid images JSON format`);
+      }
+    }
+
+    // Ratings validation
+    if (product.ratings) {
+      try {
+        const ratings = JSON.parse(product.ratings);
+        if (!Array.isArray(ratings)) {
+          errors.push(`Row ${index + 1}: Ratings must be a JSON array`);
+        } else {
+          ratings.forEach((rating, rIndex) => {
+            if (!rating.rating || rating.rating < 1 || rating.rating > 5) {
+              errors.push(`Row ${index + 1}: Rating ${rIndex + 1} must be between 1 and 5`);
+            }
+          });
+        }
+      } catch (e) {
+        errors.push(`Row ${index + 1}: Invalid ratings JSON format`);
+      }
+    }
+
+    return errors;
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -64,23 +169,27 @@ export default function BulkProductUpload() {
         const worksheet = workbook.Sheets[sheetName];
         const data = XLSX.utils.sheet_to_json(worksheet);
         
-        // Validate data structure
-        const requiredFields = ['name', 'description', 'price', 'stock', 'category', 'brand'];
-        const isValid = data.every(row => 
-          requiredFields.every(field => row[field] !== undefined && row[field] !== '')
-        );
+        // Validate all rows
+        const errors = [];
+        data.forEach((row, index) => {
+          const rowErrors = validateProduct(row, index);
+          errors.push(...rowErrors);
+        });
 
-        if (!isValid) {
-          setError('Invalid data structure. Please ensure all required fields are present.');
+        if (errors.length > 0) {
+          setValidationErrors(errors);
+          setError('Validation errors found. Please fix them before uploading.');
           setPreview([]);
           return;
         }
 
         setPreview(data.slice(0, 5)); // Show first 5 rows as preview
         setError(null);
+        setValidationErrors([]);
       } catch (err) {
         setError('Error reading file. Please ensure it\'s a valid Excel/CSV file.');
         setPreview([]);
+        setValidationErrors([]);
       }
     };
     reader.readAsBinaryString(file);
@@ -104,34 +213,49 @@ export default function BulkProductUpload() {
 
           const totalProducts = products.length;
           let uploadedCount = 0;
+          const errors = [];
 
           for (const product of products) {
-            const selectedCategory = categories.find(cat => cat.id === product.category);
-            if (!selectedCategory) {
-              throw new Error(`Invalid category for product: ${product.name}`);
+            try {
+              const selectedCategory = categories.find(cat => cat.id === product.category);
+              if (!selectedCategory) {
+                throw new Error(`Invalid category for product: ${product.name}`);
+              }
+
+              const productData = {
+                name: product.name,
+                description: product.description,
+                price: Number(product.price),
+                salePrice: product.salePrice ? Number(product.salePrice) : null,
+                stock: Number(product.stock),
+                category: selectedCategory.name,
+                brand: product.brand.trim(),
+                flavors: product.flavors ? product.flavors.split(',').map(f => ({
+                  name: f.trim(),
+                  inStock: true
+                })) : [],
+                variants: product.variants ? JSON.parse(product.variants) : [],
+                featured: product.featured === 'true',
+                mostSelling: product.mostSelling === 'true',
+                images: product.images ? JSON.parse(product.images) : [],
+                ratings: product.ratings ? JSON.parse(product.ratings) : [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+
+              await addDoc(collection(db, 'products'), productData);
+              uploadedCount++;
+              setUploadProgress((uploadedCount / totalProducts) * 100);
+            } catch (err) {
+              errors.push(`Error uploading product "${product.name}": ${err.message}`);
             }
-
-            const productData = {
-              name: product.name,
-              description: product.description,
-              price: Number(product.price),
-              stock: Number(product.stock),
-              category: selectedCategory.name,
-              brand: product.brand.trim(),
-              flavors: product.flavors ? product.flavors.split(',').map(f => f.trim()) : [],
-              variants: product.variants ? JSON.parse(product.variants) : [],
-              featured: product.featured === 'true',
-              imageUrl: product.imageUrl || '',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-
-            await addDoc(collection(db, 'products'), productData);
-            uploadedCount++;
-            setUploadProgress((uploadedCount / totalProducts) * 100);
           }
 
-          navigate('/admin/products');
+          if (errors.length > 0) {
+            setError(`Uploaded ${uploadedCount} products with ${errors.length} errors:\n${errors.join('\n')}`);
+          } else {
+            navigate('/admin/products');
+          }
         } catch (err) {
           setError(`Error processing file: ${err.message}`);
         }
@@ -170,6 +294,7 @@ export default function BulkProductUpload() {
               <p className="mt-1 text-sm text-gray-600">
                 Upload an Excel or CSV file containing product data.
               </p>
+              
               <div className="mt-4">
                 <h4 className="text-sm font-medium text-gray-700">Required Fields:</h4>
                 <ul className="mt-2 text-sm text-gray-600 list-disc list-inside">
@@ -182,10 +307,13 @@ export default function BulkProductUpload() {
                 </ul>
                 <h4 className="mt-4 text-sm font-medium text-gray-700">Optional Fields:</h4>
                 <ul className="mt-2 text-sm text-gray-600 list-disc list-inside">
+                  <li>salePrice (must be less than price)</li>
                   <li>flavors (comma-separated)</li>
-                  <li>variants (JSON string)</li>
+                  <li>variants (JSON array of objects with name, price, stock)</li>
                   <li>featured (true/false)</li>
-                  <li>imageUrl</li>
+                  <li>mostSelling (true/false)</li>
+                  <li>images (JSON array of image URLs)</li>
+                  <li>ratings (JSON array of rating objects)</li>
                 </ul>
                 <div className="mt-4">
                   <button
@@ -204,7 +332,18 @@ export default function BulkProductUpload() {
               <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
                 {error && (
                   <div className="rounded-md bg-red-50 p-4">
-                    <div className="text-sm text-red-700">{error}</div>
+                    <div className="text-sm text-red-700 whitespace-pre-line">{error}</div>
+                  </div>
+                )}
+
+                {validationErrors.length > 0 && (
+                  <div className="rounded-md bg-yellow-50 p-4">
+                    <h4 className="text-sm font-medium text-yellow-800">Validation Errors:</h4>
+                    <ul className="mt-2 text-sm text-yellow-700 list-disc list-inside">
+                      {validationErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
@@ -252,7 +391,7 @@ export default function BulkProductUpload() {
                                   key={i}
                                   className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                                 >
-                                  {value}
+                                  {typeof value === 'object' ? JSON.stringify(value) : value}
                                 </td>
                               ))}
                             </tr>
@@ -263,7 +402,7 @@ export default function BulkProductUpload() {
                   </div>
                 )}
 
-                {loading && (
+                {uploadProgress > 0 && (
                   <div className="mt-4">
                     <div className="relative pt-1">
                       <div className="flex mb-2 items-center justify-between">
@@ -300,7 +439,7 @@ export default function BulkProductUpload() {
                 <button
                   type="button"
                   onClick={processAndUploadProducts}
-                  disabled={!file || loading}
+                  disabled={!file || loading || validationErrors.length > 0}
                   className="btn-primary"
                 >
                   {loading ? 'Uploading...' : 'Upload Products'}
