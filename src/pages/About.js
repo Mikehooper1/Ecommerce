@@ -6,11 +6,11 @@ export default function About() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">About VapeX India</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">About NoruOasis </h1>
             
             <div className="prose max-w-none">
               <p className="text-gray-600 mb-4">
-                Welcome to VapeX India, your premier destination for high-quality vaping products and accessories. 
+                Welcome to NoruOasis , your premier destination for high-quality vaping products and accessories. 
                 We are committed to providing our customers with the best vaping experience through our carefully 
                 curated selection of products.
               </p>
@@ -42,7 +42,7 @@ export default function About() {
 
               <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">Our Commitment</h2>
               <p className="text-gray-600 mb-4">
-                At VapeX India, we are committed to providing our customers with the best shopping experience. 
+                At NoruOasis , we are committed to providing our customers with the best shopping experience. 
                 We carefully select our products to ensure they meet the highest standards of quality and safety. 
                 Our team of experts is always ready to assist you with any questions or concerns you may have.
               </p>
